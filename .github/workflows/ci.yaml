@@ -77,17 +77,20 @@ jobs:
 
       - name: Test install
         if: matrix.arch == 'amd64'
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
         run: |
           sudo apt install -y "./see_amd64.deb"
-          see -v
+          see -v | grep -F "$VERSION"
 
       - name: Upload .deb
         uses: actions/upload-artifact@v4
         with:
-          name: deb-${{ matrix.arch }}-${{ version.outputs.version }}
+          name: deb-${{ matrix.arch }}-${{ needs.version.outputs.version }}
           path: "*.deb"
 
   publish:
+    if: github.ref == 'refs/heads/main'
     needs: [version, build]
     runs-on: ubuntu-latest
     permissions:
