@@ -7,13 +7,13 @@ import (
 	"os"
 	"os/exec"
 	"see/internals/models"
+	"see/internals/update"
 	"see/internals/utils"
 	"strings"
-	"see/internals/update"
 )
 
 var version = "dev"
-var formattedCurrentVersion = "v"+version
+var formattedCurrentVersion = "v" + version
 
 func main() {
 	flag.Usage = utils.PrintHelp
