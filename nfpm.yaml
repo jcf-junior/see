@@ -5,7 +5,7 @@ version: ${VERSION}
 maintainer: "José Júnior <hello@jcfjunior.dev>"
 description: |
   See is a lightweight tool to list directory content and see file contents.
-  It uses batcat/cat and ls under the hood.
+  It uses bat/cat and ls under the hood.
 vendor: "jcfjunior"
 homepage: "https://github.com/jcf-junior/see"
 license: "MIT"

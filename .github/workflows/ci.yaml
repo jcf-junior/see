@@ -70,12 +70,21 @@ jobs:
           ARCH: ${{ matrix.arch }}
         run: |
           go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest
-          nfpm package --packager deb --target see_amd64.deb
+          nfpm package --packager deb --target raw.deb
+          dpkg-deb -R raw.deb pkg
+          dpkg-deb --build --root-owner-group pkg "see_${ARCH}.deb"
+          rm -rf pkg raw.deb
+
+      - name: Test install
+        if: matrix.arch == 'amd64'
+        run: |
+          sudo apt install -y "./see_amd64.deb"
+          see -v
 
       - name: Upload .deb
         uses: actions/upload-artifact@v4
         with:
-          name: deb-${{ matrix.arch }}
+          name: deb-${{ matrix.arch }}-${{ version.outputs.version }}
           path: "*.deb"
 
   publish:
