@@ -7,11 +7,10 @@ import (
 	"log"
 	"net/http"
 	"os/exec"
-	"see/internals/models"
 )
 
-func PrintVersion() {
-	fmt.Println("see version:", models.Version)
+func PrintVersion(currentVersion string) {
+	fmt.Println("see version:", currentVersion)
 	
 	latestVersion, err := CheckNewVersion()
 
@@ -20,7 +19,7 @@ func PrintVersion() {
 		return
 	}
 
-	if (latestVersion == "v"+models.Version) {
+	if (latestVersion == currentVersion) {
 		fmt.Println("You're running the latest version!")
 	} else {
 		fmt.Println("Your version is out of date. The latest version is: ", latestVersion)
@@ -63,6 +62,7 @@ func PrintHelp() {
 	fmt.Println(bold + "-c" + reset + "\t" + "Use cat even if bat is installed")
 	fmt.Println(bold + "-h" + reset + "\t" + "Print this help text")
 	fmt.Println(bold + "-v" + reset + "\t" + "Print the current version")
+	fmt.Println(bold + "-u" + reset + "\t" + "Update to the latest version")
 }
 
 

@@ -9,19 +9,26 @@ import (
 	"see/internals/models"
 	"see/internals/utils"
 	"strings"
+	"see/internals/update"
 )
 
-var Version = "dev"
+var version = "dev"
+var formattedCurrentVersion = "v"+version
 
 func main() {
 	flag.Usage = utils.PrintHelp
 	showVersion := flag.Bool("v", false, "display installed version")
-	useCat := flag.Bool("c", false, "use cat, even if bat is installed") 
+	useCat := flag.Bool("c", false, "use cat, even if bat is installed")
+	updateVersion := flag.Bool("u", false, "update see to the latest version")
 
 	flag.Parse()
 
+	if *updateVersion {
+		update.Update(formattedCurrentVersion)
+	}
+
 	if *showVersion {
-		utils.PrintVersion()
+		utils.PrintVersion(formattedCurrentVersion)
 		return
 	}
 
@@ -49,7 +56,7 @@ func main() {
 	} else if info.Mode().IsRegular() {
 		target.Cmd = "bat"
 
-		if *useCat || !utils.CommandExists("bat"){
+		if *useCat || !utils.CommandExists("bat") {
 			target.Cmd = "cat"
 		}
 	}
