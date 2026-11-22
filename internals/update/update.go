@@ -48,9 +48,25 @@ func Update(currentVersion string) {
 	install := exec.Command("sudo", "apt", "install", "/tmp/see/see.deb")
 	removeUpdateFiles := exec.Command("rm", "/tmp/see/see.deb")
 
+	curl.Stdin = os.Stdin
+	curl.Stdout = os.Stdout
+	curl.Stderr = os.Stderr
+
 	install.Stdin = os.Stdin
 	install.Stdout = os.Stdout
 	install.Stderr = os.Stderr
+
+	setInstallPathPerms.Stdin = os.Stdin
+	setInstallPathPerms.Stdout = os.Stdout
+	setInstallPathPerms.Stderr = os.Stderr
+
+	install.Stdin = os.Stdin
+	install.Stdout = os.Stdout
+	install.Stderr = os.Stderr
+
+	removeUpdateFiles.Stdin = os.Stdin
+	removeUpdateFiles.Stdout = os.Stdout
+	removeUpdateFiles.Stderr = os.Stderr
 
 	fmt.Println("Downloading files..")
 	err = curl.Run()
@@ -76,5 +92,7 @@ func Update(currentVersion string) {
 	err = removeUpdateFiles.Run()
 	if err != nil {
 		log.Fatal("Failed to remove downloaded files: ", err)
+	} else {
+		fmt.Println("Removed successfully")
 	}
 }
