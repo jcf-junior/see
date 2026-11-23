@@ -22,7 +22,7 @@ func Update(currentVersion string) {
 		fmt.Println("see is running the latest version!")
 		return
 	}
-	
+
 	fmt.Println("Latest Version: ", latestVersion)
 	fmt.Println("Current Version: ", currentVersion)
 
@@ -37,7 +37,7 @@ func Update(currentVersion string) {
 	if err != nil {
 		log.Fatal("Failed to get latest release")
 	}
-	defer res.Body.Close()	
+	defer res.Body.Close()
 
 	updateFiles, err := os.Create(updateFilePath)
 	if err != nil {
@@ -54,13 +54,13 @@ func Update(currentVersion string) {
 	install.Stdin = os.Stdin
 	install.Stdout = os.Stdout
 	install.Stderr = os.Stderr
-	
+
 	fmt.Println("Installing files..")
 	err = install.Run()
 	if err != nil {
 		log.Fatal("Failed to install downloaded files: ", err)
 	}
-	
+
 	fmt.Println("Removing temporary files...")
 	err = os.Remove(updateFilePath)
 	if err != nil {
