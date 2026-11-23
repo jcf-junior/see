@@ -37,13 +37,13 @@ func UpdateSystemWide(currentVersion string) {
 		log.Fatal("Failed to get latest release")
 	}
 	defer res.Body.Close()
-	
+
 	updateFiles, err := os.Create(updateFilePath)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer updateFiles.Close()
-	
+
 	fmt.Println("Downloading files to", updateFilePath)
 	_, err = io.Copy(updateFiles, res.Body)
 	if err != nil {
