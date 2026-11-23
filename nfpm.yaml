@@ -11,6 +11,6 @@ homepage: "https://github.com/jcf-junior/see"
 license: "MIT"
 contents:
   - src: ./see
-    dst: ~/.local/bin/see
+    dst: /usr/bin/see
     file_info:
       mode: 0755

@@ -11,7 +11,7 @@ import (
 	"see/internals/utils"
 )
 
-func Update(currentVersion string) {
+func UpdateSystemWide(currentVersion string) {
 
 	latestVersion, err := utils.CheckNewVersion()
 	if err != nil {
@@ -29,22 +29,22 @@ func Update(currentVersion string) {
 	// TODO: Change .deb to include version
 	url := fmt.Sprintf("https://github.com/jcf-junior/see/releases/latest/download/see_%s.deb", runtime.GOARCH)
 
-	updatePath := "~/.local/bin/see"
+	updatePath := "usr/bin/see"
 	updateFilePath := fmt.Sprintf("%s/see_%s.update.deb", updatePath, runtime.GOARCH)
 
-	fmt.Println("Downloading files to ~/.local/bin/see...")
 	res, err := http.Get(url)
 	if err != nil {
 		log.Fatal("Failed to get latest release")
 	}
 	defer res.Body.Close()
-
+	
 	updateFiles, err := os.Create(updateFilePath)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer updateFiles.Close()
-
+	
+	fmt.Println("Downloading files to", updateFilePath)
 	_, err = io.Copy(updateFiles, res.Body)
 	if err != nil {
 		log.Fatal(err)
