@@ -24,7 +24,7 @@ func main() {
 	flag.Parse()
 
 	if *updateVersion {
-		update.Update(formattedCurrentVersion)
+		update.UpdateSystemWide(formattedCurrentVersion)
 	}
 
 	if *showVersion {

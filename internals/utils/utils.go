@@ -11,7 +11,7 @@ import (
 
 func PrintVersion(currentVersion string) {
 	fmt.Println("see version:", currentVersion)
-	
+
 	latestVersion, err := CheckNewVersion()
 
 	if err != nil {
@@ -19,7 +19,7 @@ func PrintVersion(currentVersion string) {
 		return
 	}
 
-	if (latestVersion == currentVersion) {
+	if latestVersion == currentVersion {
 		fmt.Println("You're running the latest version!")
 	} else {
 		fmt.Println("Your version is out of date. The latest version is: ", latestVersion)
@@ -40,7 +40,7 @@ func CheckNewVersion() (string, error) {
 
 	var tagName struct {
 		Tag string `json:"tag_name"`
-	} 
+	}
 
 	err = json.Unmarshal(body, &tagName)
 	if err != nil {
@@ -64,7 +64,6 @@ func PrintHelp() {
 	fmt.Println(bold + "-v" + reset + "\t" + "Print the current version")
 	fmt.Println(bold + "-u" + reset + "\t" + "Update to the latest version")
 }
-
 
 func CommandExists(cmd string) bool {
 	_, err := exec.LookPath(cmd)
