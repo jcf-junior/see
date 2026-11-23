@@ -1,0 +1,126 @@
+name: Build Package
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.semver.outputs.version }}
+      version_tag: ${{ steps.semver.outputs.version_tag }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Git Semantic Version
+        id: semver
+        uses: PaulHatch/semantic-version@v6.0.2
+
+      - name: Garantir que a versão é nova
+        env:
+          VERSION: ${{ steps.semver.outputs.version_tag }}
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/${VERSION}" >/dev/null 2>&1; then
+            echo "A versão ${VERSION} já existe. Faz um commit novo antes de voltar a compilar."
+            exit 1
+          fi
+          echo "Nova versão: ${VERSION}" >> "$GITHUB_STEP_SUMMARY"
+
+  build:
+    needs: version
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build (${{ matrix.arch }})
+        env:
+          CGO_ENABLED: "0"
+          GOOS: linux
+          GOARCH: ${{ matrix.arch }}
+        run: |
+          go build \
+            -ldflags "-X main.version=${{ needs.version.outputs.version }}" \
+            -o see .
+          cp see "see_linux_${{ matrix.arch }}"
+
+      - name: Build .deb (${{ matrix.arch }})
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest
+          nfpm package --packager deb --target raw.deb
+          dpkg-deb -R raw.deb pkg
+          dpkg-deb --build --root-owner-group pkg "see_${ARCH}.deb"
+          rm -rf pkg raw.deb
+
+      - name: Test install
+        if: matrix.arch == 'amd64'
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          sudo apt install -y "./see_amd64.deb"
+          see -v | grep -F "$VERSION"
+
+      - name: Upload release files
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.arch }}-${{ needs.version.outputs.version }}
+          path: |
+            *.deb
+            see_linux_${{ matrix.arch }}
+
+  publish:
+    if: github.ref == 'refs/heads/main'
+    needs: [version, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Upload release files
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.arch }}-${{ needs.version.outputs.version }}
+          path: |
+            *.deb
+            see_linux_${{ matrix.arch }}
+
+      - name: Create git tag
+        env:
+          VERSION: ${{ needs.version.outputs.version_tag }}
+        run: |
+          git tag "$VERSION" "$GITHUB_SHA"
+          git push origin "$VERSION"
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.version.outputs.version_tag }}
+          files: |
+            *.deb
+            see_linux_*
