@@ -2,12 +2,13 @@ package update
 
 import (
 	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"os"
 	"os/exec"
 	"runtime"
 	"see/internals/utils"
-	"strings"
 )
 
 func Update(currentVersion string) {
@@ -25,74 +26,46 @@ func Update(currentVersion string) {
 	fmt.Println("Latest Version: ", latestVersion)
 	fmt.Println("Current Version: ", currentVersion)
 
-	var input string
-
-	for {
-		fmt.Println("The installation will run 'sudo apt install'. If you don't want to update as sudo, please refer to the manual installation steps in GitHub.")
-		fmt.Print("Proceed with installation? (Y/n) ")
-		fmt.Scanln(&input)
-
-		if strings.ToLower(input) == "y" {
-			break
-		} else if strings.ToLower(input) == "n" {
-			fmt.Println("Aborting update...")
-			return
-		}
-		continue
-	}
-
+	// TODO: Change .deb to include version
 	url := fmt.Sprintf("https://github.com/jcf-junior/see/releases/latest/download/see_%s.deb", runtime.GOARCH)
 
-	curl := exec.Command("curl", "-fSL", "--create-dirs", "-o", "/tmp/see/see.deb", url)
-	setInstallPathPerms := exec.Command("chmod", "-R", "755", "/tmp/see/")
-	install := exec.Command("sudo", "apt", "install", "/tmp/see/see.deb")
-	removeUpdateFiles := exec.Command("rm", "/tmp/see/see.deb")
+	updatePath := "~/.local/bin/see"
+	updateFilePath := fmt.Sprintf("%s/see_%s.update.deb", updatePath, runtime.GOARCH)
 
-	curl.Stdin = os.Stdin
-	curl.Stdout = os.Stdout
-	curl.Stderr = os.Stderr
+	fmt.Println("Downloading files to ~/.local/bin/see...")
+	res, err := http.Get(url)
+	if err != nil {
+		log.Fatal("Failed to get latest release")
+	}
+	defer res.Body.Close()	
 
+	updateFiles, err := os.Create(updateFilePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer updateFiles.Close()
+
+	_, err = io.Copy(updateFiles, res.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	install := exec.Command("apt", "install", updateFilePath)
 	install.Stdin = os.Stdin
 	install.Stdout = os.Stdout
 	install.Stderr = os.Stderr
-
-	setInstallPathPerms.Stdin = os.Stdin
-	setInstallPathPerms.Stdout = os.Stdout
-	setInstallPathPerms.Stderr = os.Stderr
-
-	install.Stdin = os.Stdin
-	install.Stdout = os.Stdout
-	install.Stderr = os.Stderr
-
-	removeUpdateFiles.Stdin = os.Stdin
-	removeUpdateFiles.Stdout = os.Stdout
-	removeUpdateFiles.Stderr = os.Stderr
-
-	fmt.Println("Downloading files..")
-	err = curl.Run()
-	if err != nil {
-		log.Fatal("Failed to download update files: ", err)
-	} else {
-		fmt.Println("Files downloaded to /tmp/see/see.deb")
-	}
-
-	fmt.Println("Setting /tmp/see permissions to 755...")
-	err = setInstallPathPerms.Run()
-	if err != nil {
-		log.Fatal("Failed to set permissions: ", err)
-	}
 	
 	fmt.Println("Installing files..")
 	err = install.Run()
 	if err != nil {
 		log.Fatal("Failed to install downloaded files: ", err)
 	}
-
-	fmt.Println("Removing temporary files..")
-	err = removeUpdateFiles.Run()
+	
+	fmt.Println("Removing temporary files...")
+	err = os.Remove(updateFilePath)
 	if err != nil {
-		log.Fatal("Failed to remove downloaded files: ", err)
+		log.Fatal(err)
 	} else {
-		fmt.Println("Removed successfully")
+		fmt.Println("Update completed successfully")
 	}
 }
