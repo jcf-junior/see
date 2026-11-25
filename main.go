@@ -32,16 +32,16 @@ func main() {
 		return
 	}
 
-	if len(os.Args) == 1 {
-		utils.PrintHelp()
-		return
-	}
-
 	var target models.Target
 
-	for _, arg := range os.Args[1:] {
-		if !strings.HasPrefix(arg, "-") {
-			target.Path = arg
+	
+	if len(os.Args) == 1 { 
+		target.Path = "."
+	} else {
+		for _, arg := range os.Args[1:] {
+			if !strings.HasPrefix(arg, "-") {
+				target.Path = arg
+			}
 		}
 	}
 
