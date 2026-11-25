@@ -34,8 +34,7 @@ func main() {
 
 	var target models.Target
 
-	
-	if len(os.Args) == 1 { 
+	if len(os.Args) == 1 {
 		target.Path = "."
 	} else {
 		for _, arg := range os.Args[1:] {
